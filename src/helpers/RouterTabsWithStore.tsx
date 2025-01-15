@@ -1,96 +1,96 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { RouterTabState } from "../contexts/RouterTabContext.js";
 import { RouterTab } from "../providers/RouterTabProvider.js";
-import { findMatchingTab } from "../tools/findMatchingTab.js";
+import { findMatchingTab, isTabMatch } from "../tools/findMatchingTab.js";
 import { findRoute } from "../tools/findRoute.js";
-import { WebLocationRouterTabsStore } from "../tools/WebLocationRouterTabsStore.js";
 import { RouteDescriptor } from "../components/RecursiveRoute.js";
 import { RouteTab } from "../models/RouteTab.js";
+import { isContainedIn } from "../tools/isContainedIn.js";
+import { useLocalStorage } from "../hooks/useLocalStorageSync.js";
 
 export interface RouterTabsWithStoreProps<TTab extends RouteTab> {
   storeKey: string;
-  onAddTab?: (tab: TTab, state?: RouterTabState<TTab>) => void;
-  onFocusTab?: (tab: TTab, state: RouterTabState<TTab>) => void;
-  onRemoveTab?: (tab: TTab, state: RouterTabState<TTab>) => void;
+  fallbackPath: string;
   routes: RouteDescriptor<TTab>[];
-  forceInitializeOfTabs?: string[];
 }
 
 export function RouterTabsWithStore<TTab extends RouteTab>({
   storeKey,
-  onAddTab,
-  onRemoveTab,
-  onFocusTab,
+  fallbackPath,
   routes,
   ...props
 }: RouterTabsWithStoreProps<TTab>) {
-  const store = useMemo(
-    () => new WebLocationRouterTabsStore<TTab>(storeKey),
-    [storeKey]
-  );
+  const [tabs = [], setState] = useLocalStorage<TTab[]>(storeKey, []);
 
-  const getTabsFromStorage = useCallback(() => {
-    return store.get().map((tab) => {
+  const transformedTabs = useMemo(() => {
+    return tabs.map((tab) => {
       const route = findRoute({
         routes,
         attributeKey: "type",
         value: tab.type,
       });
 
-      if (!route || !route.tab) throw new Error("Route with tab not found");
-
-      const TabConstructor = route.tab;
-
-      return new TabConstructor(tab.params, tab.query);
+      if (!route?.tab) throw new Error("Route with tab not found");
+      return new route.tab(tab.params, tab.query);
     });
-  }, [store, routes]);
-
-  const [tabs, setTabs] = useState(() => getTabsFromStorage());
-
-  const set = useCallback((tabs: TTab[]) => store.set(tabs), [store]);
+  }, [tabs, routes]);
 
   const handleAddTab = useCallback(
     (tab: TTab, state?: RouterTabState<TTab>) => {
-      setTabs((tabs) => {
-        const _tab = findMatchingTab({ tabs, targetTab: tab });
-        if (_tab) return tabs;
+      setState((actualTabs) => {
+        const _tab = findMatchingTab({ tabs: actualTabs, targetTab: tab });
+        if (_tab) return actualTabs;
 
-        const _tabs = tabs.concat(tab);
-
-        set(_tabs);
-        onAddTab?.(tab, state);
-        return _tabs;
+        return [...actualTabs, tab];
       });
+
+      tab.onAdd?.();
+      // @TODO - onBlur
     },
-    [onAddTab, set]
+    [setState]
   );
 
   const handleRemoveTab = useCallback(
     (tab: TTab, state: RouterTabState<TTab>) => {
-      setTabs((tabs) => {
-        const _tabs = tabs.toSpliced(tabs.indexOf(tab), 1);
-        set(_tabs);
-        onRemoveTab?.(tab, state);
-        return _tabs;
+      const updatedTabs: TTab[] = [];
+
+      setState((_tabs) => {
+        const tabs = _tabs.filter((_tab) => {
+          const isActualTab = isTabMatch(_tab, tab);
+          const isRelatedTab =
+            isContainedIn(_tab.params, tab.params) &&
+            isContainedIn(_tab.query, tab.query);
+
+          return !isActualTab && !isRelatedTab;
+        });
+
+        updatedTabs.push(...tabs);
+
+        return tabs;
       });
+
+      tab.onRemove?.();
+
+      return updatedTabs;
     },
-    [onRemoveTab, set]
+    [setState]
   );
 
   const handleFocusTab = useCallback(
     (tab: TTab, state: RouterTabState<TTab>) => {
-      onFocusTab?.(tab, state);
-      return store.setLastFocusTab(tab);
+      tab.onFocus?.();
+      // @TODO - onBlur
     },
-    [store, onFocusTab]
+    []
   );
 
   return (
     <RouterTab
-      tabs={tabs}
+      tabs={transformedTabs}
       onAddTab={handleAddTab}
       onFocusTab={handleFocusTab}
       onRemoveTab={handleRemoveTab}
+      fallbackPath={fallbackPath}
       routes={routes}
       {...props}
     />

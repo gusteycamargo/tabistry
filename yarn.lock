@@ -2340,9 +2340,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-router@npm:^7.0.2":
-  version: 7.1.0
-  resolution: "react-router@npm:7.1.0"
+"react-router@npm:^7.1.1":
+  version: 7.1.1
+  resolution: "react-router@npm:7.1.1"
   dependencies:
     "@types/cookie": "npm:^0.6.0"
     cookie: "npm:^1.0.1"
@@ -2354,7 +2354,7 @@ __metadata:
   peerDependenciesMeta:
     react-dom:
       optional: true
-  checksum: 10c0/c4f4c76dc885cb2b351575052417f0a95ad454ae7cc27f42e5dcde993697b206eab9f5eb3f9a3acb1284331d41f8667bd4d10e246d463c3debd7d4de3edaa50b
+  checksum: 10c0/39f4859670f286eb2eac29e5830c1f730405701fca0808e5db853ec05e54e55a848c764e10ffd14a7b9b3b2154a0d6449656d7f208b9b3e4b2af780e07bf57a8
   languageName: node
   linkType: hard
 
@@ -2665,7 +2665,7 @@ __metadata:
     globals: "npm:^15.12.0"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
-    react-router: "npm:^7.0.2"
+    react-router: "npm:^7.1.1"
     typescript: "npm:~5.6.2"
     typescript-eslint: "npm:^8.15.0"
     vite: "npm:^6.0.1"

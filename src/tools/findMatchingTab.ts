@@ -6,7 +6,7 @@ interface Props<TRouteTab extends RouteTab> {
   targetTab: TRouteTab;
 }
 
-const isTabMatch = <TRouteTab extends RouteTab>(
+export const isTabMatch = <TRouteTab extends RouteTab>(
   tab: TRouteTab,
   targetTab: TRouteTab
 ) => {
@@ -21,8 +21,3 @@ export const findMatchingTab = <TRouteTab extends RouteTab>({
   tabs,
   targetTab,
 }: Props<TRouteTab>) => tabs.find((tab) => isTabMatch(tab, targetTab));
-
-export const findIndexMatchingTab = <TRouteTab extends RouteTab>({
-  tabs,
-  targetTab,
-}: Props<TRouteTab>) => tabs.findIndex((tab) => isTabMatch(tab, targetTab));

@@ -4,7 +4,6 @@ import { createContext } from "react";
 import { RouteTab } from "../models/RouteTab.js";
 
 export interface RouterTabState<TTab extends RouteTab> {
-  tab: TTab | undefined;
   tabs: TTab[];
   change: (tab: TTab) => void;
   remove: (tab: TTab) => void;

@@ -17,19 +17,21 @@ export const findRoute = <TTab extends RouteTab>({
   routes,
   attributeKey,
   value,
+  actualPath = "",
 }: FindProps<TTab>): RouteDescriptor<TTab> | undefined => {
   const isValueFunction = typeof value === "function";
 
-  for (const route of routes) {
-    const result = isValueFunction
-      ? (value as FindFunction<TTab>)(route[attributeKey])
-      : route[attributeKey] === value;
+  for (const routeProp of routes) {
+    const route = Object.assign({}, routeProp);
 
-    if (result) return route;
+    if (actualPath) {
+      if (!route.path) route.path = actualPath;
+      else route.path = `${actualPath}/${route.path}`.replace(/\/+/g, "/");
+    }
 
-    if (route.childrens) {
+    if (route.children) {
       const result = findRoute({
-        routes: route.childrens,
+        routes: route.children,
         attributeKey: attributeKey,
         value,
         actualPath: route.path,
@@ -37,6 +39,12 @@ export const findRoute = <TTab extends RouteTab>({
 
       if (result) return result;
     }
+
+    const result = isValueFunction
+      ? (value as FindFunction<TTab>)(route?.[attributeKey])
+      : route?.[attributeKey] === value;
+
+    if (result) return route;
   }
 
   return;
