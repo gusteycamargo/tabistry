@@ -58,8 +58,8 @@ export function RouterTabsWithStore<TTab extends RouteTab>({
         const tabs = _tabs.filter((_tab) => {
           const isActualTab = isTabMatch(_tab, tab);
           const isRelatedTab =
-            isContainedIn(_tab.params, tab.params) &&
-            isContainedIn(_tab.query, tab.query);
+            isContainedIn(tab.params, _tab.params) &&
+            isContainedIn(tab.query, _tab.query);
 
           return !isActualTab && !isRelatedTab;
         });
