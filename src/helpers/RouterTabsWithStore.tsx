@@ -23,16 +23,20 @@ export function RouterTabsWithStore<TTab extends RouteTab>({
   const [tabs = [], setState] = useLocalStorage<TTab[]>(storeKey, []);
 
   const transformedTabs = useMemo(() => {
-    return tabs.map((tab) => {
-      const route = findRoute({
-        routes,
-        attributeKey: "type",
-        value: tab.type,
-      });
+    return tabs
+      .map((tab) => {
+        const route = findRoute({
+          routes,
+          attributeKey: "type",
+          value: tab.type,
+        });
 
-      if (!route?.tab) throw new Error("Route with tab not found");
-      return new route.tab(tab.params, tab.query);
-    });
+        if (route?.tab) return new route.tab(tab.params, tab.query);
+
+        console.warn(`Route not found for tab: ${tab.type}`);
+        return null;
+      })
+      .filter((tab) => tab) as unknown as TTab[];
   }, [tabs, routes]);
 
   const handleAddTab = useCallback(
